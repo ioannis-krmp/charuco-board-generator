@@ -6,7 +6,7 @@ __pycache__/
 *.stl
 *.3mf
 *.step
-*.png
+charuco*.png
 *.FCStd
 *.glb
 meta*.txt

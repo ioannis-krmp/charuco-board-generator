@@ -4,6 +4,8 @@ Generate 3D-printable CharUco calibration boards with a GUI.
 
 Outputs STL (black + white parts for dual-color printing), 3MF (single file with both parts), and optionally STEP (colored CAD assembly via CadQuery).
 
+![Charuco Board Generator GUI](screenshot.png)
+
 ## Setup
 
 ### 1) Install uv

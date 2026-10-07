@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Generated outputs
+*.stl
+*.3mf
+*.step
+*.png
+*.FCStd
+*.glb
+meta*.txt

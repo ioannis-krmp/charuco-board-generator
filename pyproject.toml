@@ -1,0 +1,11 @@
+[project]
+name = "charuco-board-generator"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.4",
+    "trimesh[easy]>=4.12",
+    "cadquery>=2.8.0",
+    "pyqt6>=6.11.0",
+    "opencv-contrib-python-headless>=5.0.0.93",
+]

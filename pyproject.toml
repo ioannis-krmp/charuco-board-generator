@@ -10,5 +10,7 @@ dependencies = [
     "opencv-contrib-python-headless>=5.0.0.93",
 ]
 
-[tool.uv]
-required-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

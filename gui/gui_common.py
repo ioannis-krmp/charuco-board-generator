@@ -14,6 +14,7 @@ from PyQt6.QtGui import QImage, QPixmap
 
 from export.geometry import build_meshes
 from export.mesh_export import StepExportWorker
+from .theme import PREVIEW_STYLE
 
 
 class BoardTab(QWidget):
@@ -62,7 +63,7 @@ class BoardTab(QWidget):
         self._preview.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
-        self._preview.setStyleSheet("background: #222; color: #aaa; border: 1px solid #555;")
+        self._preview.setStyleSheet(PREVIEW_STYLE)
         layout.addWidget(self._preview, stretch=1)
 
         self._update_info()

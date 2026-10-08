@@ -8,6 +8,7 @@ from boards.board_types import ARUCO_DICTS, APRILTAG_DICTS
 from gui.tab_charuco import CharucoTab
 from gui.tab_aruco_grid import ArucoGridTab
 from gui.tab_fiducial import FiducialTab
+from gui.theme import STYLESHEET
 
 
 class MainWindow(QMainWindow):
@@ -47,6 +48,8 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+    app.setStyleSheet(STYLESHEET)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

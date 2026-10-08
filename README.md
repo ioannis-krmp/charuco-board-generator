@@ -107,6 +107,8 @@ square_size: 0.020
 marker_size: 0.015
 ```
 
+**Naming convention:** OpenCV's `CharucoBoard` and this tool use `squares_x` = columns (horizontal) and `squares_y` = rows (vertical). Swapping these silently transposes the board and corrupts pose estimation.
+
 ## Troubleshooting
 
 **"Could not load the Qt platform plugin xcb"** on Linux:

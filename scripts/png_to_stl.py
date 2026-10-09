@@ -17,7 +17,8 @@ def build_stl(
     meta_path: str,
     out_black_stl: str,
     out_white_stl: str,
-    thick_mm: float = 2.5,
+    pattern_mm: float = 2.5,
+    base_mm: float = 0.0,
     border_mm: float = 0.0,
 ) -> None:
     print("A: start")
@@ -34,7 +35,7 @@ def build_stl(
     print("C: image loaded", img.shape)
 
     print("D: building meshes (polygons, union, extrude)...")
-    black_mesh, white_mesh = build_meshes(img, w, h, ppm, thick_mm, border_mm=border_mm)
+    black_mesh, white_mesh = build_meshes(img, w, h, ppm, pattern_mm, base_mm=base_mm, border_mm=border_mm)
     print(f"   black: {len(black_mesh.faces)} faces, volume {black_mesh.volume:.2f} mm³")
     print(f"   white: {len(white_mesh.faces)} faces, volume {white_mesh.volume:.2f} mm³")
 
@@ -51,6 +52,7 @@ def build_stl(
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        print("Usage: png_to_stl.py <png> <meta> <output_black.stl> <output_white.stl>")
+        print("Usage: png_to_stl.py <png> <meta> <output_black.stl> <output_white.stl> [pattern_mm] [base_mm]")
         sys.exit(1)
-    build_stl(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    extra = [float(a) for a in sys.argv[5:7]]
+    build_stl(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], *extra)

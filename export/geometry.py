@@ -41,10 +41,41 @@ def image_to_polygons(img, w, h, ppm, border_mm=0.0):
     return black_poly, white_poly
 
 
-def build_meshes(img, w, h, ppm, thick_mm, border_mm=0.0):
+def board_bounds(black_poly, white_poly):
+    """Bounding box of the whole board. The two polygons partition it, so
+    combining their bounds is exact (and far cheaper than a polygon union)."""
+    b, w = black_poly.bounds, white_poly.bounds
+    return min(b[0], w[0]), min(b[1], w[1]), max(b[2], w[2]), max(b[3], w[3])
+
+
+def build_meshes(img, w, h, ppm, pattern_mm, base_mm=0.0, border_mm=0.0):
+    """Black/white meshes for dual-color printing.
+
+    pattern_mm is the height of the two-color layer. base_mm > 0 adds a solid
+    full-board white base below it, so the black islands sit on (and bond to)
+    white instead of touching it only at side walls. The pattern then spans
+    z = base_mm .. base_mm + pattern_mm. base_mm = 0 means both colors run
+    the full height (no base).
+    """
+    if pattern_mm <= 0:
+        raise ValueError("pattern_mm must be > 0")
+    if base_mm < 0:
+        raise ValueError("base_mm must be >= 0")
     black_poly, white_poly = image_to_polygons(img, w, h, ppm, border_mm)
-    black_mesh = extrude_polygon(black_poly, thick_mm)
-    white_mesh = extrude_polygon(white_poly, thick_mm)
+
+    black_mesh = extrude_polygon(black_poly, pattern_mm)
+    white_mesh = extrude_polygon(white_poly, pattern_mm)
+    if base_mm == 0:
+        return black_mesh, white_mesh
+
+    black_mesh.apply_translation((0, 0, base_mm))
+    white_mesh.apply_translation((0, 0, base_mm))
+    minx, miny, maxx, maxy = board_bounds(black_poly, white_poly)
+    base_mesh = extrude_polygon(shapely_box(minx, miny, maxx, maxy), base_mm)
+    # Plain concatenation, not a boolean union: the raster-traced pattern
+    # isn't guaranteed watertight (diagonal pixel corners), and slicers merge
+    # overlapping shells within one part per layer anyway.
+    white_mesh = trimesh.util.concatenate([base_mesh, white_mesh])
     return black_mesh, white_mesh
 
 

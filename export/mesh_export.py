@@ -12,18 +12,19 @@ class StepExportWorker(QThread):
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
 
-    def __init__(self, img, w, h, ppm, thick_mm, out_path):
+    def __init__(self, img, w, h, ppm, pattern_mm, out_path, base_mm=0.0):
         super().__init__()
         self.img = img
         self.w, self.h, self.ppm = w, h, ppm
-        self.thick_mm = thick_mm
+        self.pattern_mm = pattern_mm
+        self.base_mm = base_mm
         self.out_path = out_path
 
     def run(self):
         try:
             export_step(
-                self.img, self.w, self.h, self.ppm, self.thick_mm, self.out_path,
-                progress_cb=self.progress.emit,
+                self.img, self.w, self.h, self.ppm, self.pattern_mm, self.out_path,
+                base_mm=self.base_mm, progress_cb=self.progress.emit,
             )
             self.finished.emit(self.out_path)
         except Exception as e:

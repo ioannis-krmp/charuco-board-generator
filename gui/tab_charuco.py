@@ -34,12 +34,6 @@ class CharucoTab(BoardTab):
         self._dict_cb.setCurrentIndex(5)  # DICT_5X5_250
         form.addRow("Dictionary:", self._dict_cb)
 
-        self._thick = QDoubleSpinBox()
-        self._thick.setRange(0.5, 10)
-        self._thick.setValue(2.5)
-        self._thick.setSuffix(" mm")
-        form.addRow("Thickness:", self._thick)
-
         self._ppm = QSpinBox()
         self._ppm.setRange(1, 20)
         self._ppm.setValue(4)
@@ -49,7 +43,6 @@ class CharucoTab(BoardTab):
         for w in (self._sq_x, self._sq_y, self._sq_mm, self._mk_mm, self._ppm):
             w.valueChanged.connect(self._on_param_changed)
         self._dict_cb.currentIndexChanged.connect(self._on_param_changed)
-        self._thick.valueChanged.connect(self._on_param_changed)
 
     def _params(self):
         idx = self._dict_cb.currentIndex()
@@ -62,7 +55,6 @@ class CharucoTab(BoardTab):
             "dict_id": dict_id,
             "dict_name": name,
             "dict_capacity": capacity,
-            "thick_mm": self._thick.value(),
             "ppm": self._ppm.value(),
         }
 

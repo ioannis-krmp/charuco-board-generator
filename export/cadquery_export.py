@@ -5,10 +5,10 @@ module has no Qt dependency.
 """
 from shapely.geometry import MultiPolygon, Polygon
 
-from .geometry import image_to_polygons
+from .geometry import board_bounds, image_to_polygons
 
 
-def export_step(img, w, h, ppm, thick_mm, out_path, border_mm=0.0, progress_cb=None):
+def export_step(img, w, h, ppm, pattern_mm, out_path, base_mm=0.0, border_mm=0.0, progress_cb=None):
     import cadquery as cq
 
     def report(msg):
@@ -19,10 +19,19 @@ def export_step(img, w, h, ppm, thick_mm, out_path, border_mm=0.0, progress_cb=N
     black_poly, white_poly = image_to_polygons(img, w, h, ppm, border_mm)
 
     report("Extruding black solid (this takes a while)...")
-    black_solid = _extrude_cq(black_poly, thick_mm, cq, "black", report)
+    black_solid = _extrude_cq(black_poly, pattern_mm, cq, "black", report, z=base_mm)
 
     report("Extruding white solid...")
-    white_solid = _extrude_cq(white_poly, thick_mm, cq, "white", report)
+    white_solid = _extrude_cq(white_poly, pattern_mm, cq, "white", report, z=base_mm)
+    if base_mm > 0:
+        report("Fusing white base...")
+        minx, miny, maxx, maxy = board_bounds(black_poly, white_poly)
+        base = (
+            cq.Workplane("XY")
+            .box(maxx - minx, maxy - miny, base_mm, centered=False)
+            .translate((minx, miny, 0))
+        )
+        white_solid = base.union(white_solid)
 
     report("Building assembly and saving STEP...")
     asm = cq.Assembly()
@@ -32,9 +41,9 @@ def export_step(img, w, h, ppm, thick_mm, out_path, border_mm=0.0, progress_cb=N
     return out_path
 
 
-def _extrude_cq(poly, height, cq, label, report):
+def _extrude_cq(poly, height, cq, label, report, z=0.0):
     if isinstance(poly, Polygon):
-        return _extrude_single_cq(poly, height, cq)
+        return _extrude_single_cq(poly, height, cq, z)
     elif isinstance(poly, MultiPolygon):
         geoms = list(poly.geoms)
         total = len(geoms)
@@ -42,16 +51,17 @@ def _extrude_cq(poly, height, cq, label, report):
         for i, p in enumerate(geoms):
             if i % 20 == 0:
                 report(f"Extruding {label}: {i}/{total} polygons...")
-            solids.append(_extrude_single_cq(p, height, cq).val())
+            solids.append(_extrude_single_cq(p, height, cq, z).val())
         compound = cq.Compound.makeCompound(solids)
         return cq.Workplane().newObject([compound])
     raise TypeError(f"Unexpected geometry type: {type(poly)}")
 
 
-def _extrude_single_cq(poly, height, cq):
+def _extrude_single_cq(poly, height, cq, z=0.0):
+    plane = cq.Plane(origin=(0, 0, z))
     exterior = list(poly.exterior.coords)
-    wp = cq.Workplane("XY").polyline(exterior).close().extrude(height)
+    wp = cq.Workplane(plane).polyline(exterior).close().extrude(height)
     for hole in poly.interiors:
-        cut = cq.Workplane("XY").polyline(list(hole.coords)).close().extrude(height)
+        cut = cq.Workplane(plane).polyline(list(hole.coords)).close().extrude(height)
         wp = wp.cut(cut)
     return wp

@@ -46,12 +46,6 @@ class FiducialTab(BoardTab):
         self._spacing_mm.setSuffix(" mm")
         form.addRow("Spacing:", self._spacing_mm)
 
-        self._thick = QDoubleSpinBox()
-        self._thick.setRange(0.5, 10)
-        self._thick.setValue(2.5)
-        self._thick.setSuffix(" mm")
-        form.addRow("Thickness:", self._thick)
-
         self._ppm = QSpinBox()
         self._ppm.setRange(1, 20)
         self._ppm.setValue(4)
@@ -60,7 +54,6 @@ class FiducialTab(BoardTab):
 
         for w in (self._cols, self._rows, self._square_mm, self._circle_mm, self._spacing_mm, self._ppm):
             w.valueChanged.connect(self._on_param_changed)
-        self._thick.valueChanged.connect(self._on_param_changed)
         self._mode_cb.currentIndexChanged.connect(self._on_mode_changed)
         self._on_mode_changed()
 
@@ -87,7 +80,6 @@ class FiducialTab(BoardTab):
             "square_mm": self._square_mm.value(),
             "circle_mm": self._circle_mm.value(),
             "spacing_mm": self._spacing_mm.value(),
-            "thick_mm": self._thick.value(),
             "ppm": self._ppm.value(),
         }
 

@@ -34,7 +34,7 @@ cd charuco-board-generator
 uv sync
 ```
 
-`uv sync` creates `.venv/` and installs all dependencies from `pyproject.toml`: OpenCV, trimesh, shapely, CadQuery, PyQt6, numpy. All of these publish wheels for Linux, macOS, and Windows, so the same commands work on any OS — on Windows, run them from PowerShell (the `uv` installer gives you a PowerShell-native install command on its docs page).
+`uv sync` creates `.venv/` and installs all dependencies from `pyproject.toml`: OpenCV, trimesh, shapely, CadQuery, PyQt6, pyqtgraph + PyOpenGL (3D view), numpy. All of these publish wheels for Linux, macOS, and Windows, so the same commands work on any OS — on Windows, run them from PowerShell (the `uv` installer gives you a PowerShell-native install command on its docs page).
 
 ### 3) Verify
 
@@ -53,16 +53,21 @@ Board Info / Export layout; only the parameters differ.
 
 - **ChArUco** — checkerboard with embedded ArUco markers at the corners.
   Squares X/Y, square size, marker size (must be smaller than square size),
-  ArUco dictionary, thickness, resolution.
+  ArUco dictionary, resolution.
 - **ArUco** — a plain grid of ArUco markers (no checkerboard), useful as a
   lighter-weight pose target. Markers X/Y, marker size, separation, ArUco
-  dictionary, thickness, resolution.
+  dictionary, resolution.
 - **AprilTag** — identical to the ArUco tab but backed by OpenCV's built-in
   AprilTag dictionaries (`DICT_APRILTAG_16h5/25h9/36h10/36h11`) instead of
   ArUco ones — no extra dependency required.
 - **Chessboard** — classic calibration patterns with no embedded IDs: plain
   chessboard (the default), or a symmetric/asymmetric circle grid. Pick the
   pattern from the dropdown; the relevant size fields show/hide accordingly.
+
+Each tab has a **2D / 3D** toggle above the preview. The 3D view shows the
+black and white parts as they will print: left-drag to orbit, right-drag to
+pan, wheel to zoom. "Exaggerate height" stretches Z so the thin base and
+pattern layers are easy to see, and "Reset view" re-frames the board.
 
 On every tab, the preview updates automatically as you change parameters,
 and the Board Info panel flags invalid combinations (e.g. not enough
@@ -74,8 +79,10 @@ markers in the chosen dictionary) before letting you export.
 - **Export 3MF** — single file containing both parts (~1 second)
 - **Export STEP** — colored CAD assembly via CadQuery (slow, runs in background with progress)
 
-Exported filenames are prefixed by board type, e.g. `charuco_16_14_20mm_black.stl`,
-`arucogrid_5_7_30mm_black.stl`, `apriltag_5_7_30mm_black.stl`, `chessboard_9_6_black.stl`.
+Exported filenames are prefixed by board type and end with the print heights
+(`b` = base, `p` = pattern, in mm), e.g. `charuco_16_14_20mm_b4_p0.6_black.stl`,
+`arucogrid_5_7_30mm_b4_p0.6_black.stl`, or `chessboard_9_6_p2.4_black.stl` with
+the base turned off. STL export asks before overwriting existing files.
 
 ### CLI tools
 
@@ -85,13 +92,13 @@ regions < 128) and a `meta.txt` with three lines — `width_px`, `height_px`,
 
 ```bash
 # Generate an STL pair directly from the PNG + metadata
-uv run python scripts/png_to_stl.py <board.png> <meta.txt> <black.stl> <white.stl>
+uv run python scripts/png_to_stl.py <board.png> <meta.txt> <black.stl> <white.stl> [pattern_mm] [base_mm]
 
 # Generate 3MF from an existing STL pair
 uv run python scripts/build_3mf.py <black.stl> <white.stl> [output.3mf]
 
 # Generate colored STEP from board PNG + metadata (slow)
-uv run python scripts/build_step.py <board.png> <meta.txt> <output.step>
+uv run python scripts/build_step.py <board.png> <meta.txt> <output.step> [pattern_mm] [base_mm]
 ```
 
 ### Tests
@@ -110,6 +117,14 @@ Load both STL files (or the single 3MF) in your slicer:
 - Keep the same origin — don't re-center either part
 - Assign black filament to the black part, white filament to the white part
 - Print sequence: **By layer**
+- **Layer height / Solid white base / Base height / Pattern height** (defaults 0.2 / on / 4.0 / 0.6 mm):
+  the two-color pattern is only `Pattern height` tall and sits on a full-board
+  white base of `Base height`. The black areas then bond to the white base
+  below them instead of only at the side walls, and color/nozzle switching
+  only happens in the pattern layers. Set `Layer height` to your slicer's
+  value and both heights snap to multiples of it (e.g. 0.6 mm = 3 x 0.2 mm). A thicker base mainly adds stiffness (useful
+  for large boards), not color adhesion. Untick the base for the old layout,
+  where both colors run the full `Pattern height` and touch only at side walls.
 - Add brim for large boards to prevent warping
 - Measure printed square size with calipers and update your calibration config if needed
 
@@ -119,6 +134,7 @@ Load both STL files (or the single 3MF) in your slicer:
 main.py                      # Entry point: QMainWindow with one tab per board type
 gui/
   gui_common.py              # BoardTab base class: shared preview/export logic
+  mesh_view.py               # Interactive 3D mesh preview (pyqtgraph OpenGL)
   tab_charuco.py             # ChArUco tab
   tab_aruco_grid.py          # ArUco / AprilTag tab (same class, different dictionary list)
   tab_fiducial.py            # Chessboard / circle-grid tab

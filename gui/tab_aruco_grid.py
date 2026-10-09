@@ -46,12 +46,6 @@ class ArucoGridTab(BoardTab):
         self._dict_cb.setCurrentIndex(self._default_dict_index)
         form.addRow("Dictionary:", self._dict_cb)
 
-        self._thick = QDoubleSpinBox()
-        self._thick.setRange(0.5, 10)
-        self._thick.setValue(2.5)
-        self._thick.setSuffix(" mm")
-        form.addRow("Thickness:", self._thick)
-
         self._ppm = QSpinBox()
         self._ppm.setRange(1, 20)
         self._ppm.setValue(4)
@@ -61,7 +55,6 @@ class ArucoGridTab(BoardTab):
         for w in (self._mk_x, self._mk_y, self._mk_mm, self._sep_mm, self._ppm):
             w.valueChanged.connect(self._on_param_changed)
         self._dict_cb.currentIndexChanged.connect(self._on_param_changed)
-        self._thick.valueChanged.connect(self._on_param_changed)
 
     def _params(self):
         idx = self._dict_cb.currentIndex()
@@ -74,7 +67,6 @@ class ArucoGridTab(BoardTab):
             "dict_id": dict_id,
             "dict_name": name,
             "dict_capacity": capacity,
-            "thick_mm": self._thick.value(),
             "ppm": self._ppm.value(),
         }
 
